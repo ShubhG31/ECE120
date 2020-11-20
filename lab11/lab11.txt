@@ -1,9 +1,35 @@
 Question 1: Describe the errors that occur when trying to assemble lab11.asm. Identify the cause of each error.
 
+Line 14-illegal operands for missing opcode; This is because it is seeing x3000 as an operand for no oppcodes, so it considers it an illegal operand. If origin is specified then the problem would be eliminated
+
+Line 16-instruction appears before .ORIG; Since origin isn't specified the next instuction can not be used since memory location is not specified for the instruction.
+
+Line 17-constant outside of allowed range; the operand for LD is not Number in the code since its in hex form and the range is from [-512,255] and the x3010 is too large while also not being in a decimal value. 
+
+Line 19- illegal operands for ADD; it has a minor syntax error, because it has an extra comma which the assembler thinks is a opperand.
+
+Line 30- constant outside of allowed range; The operand for LD is not valid, since the offset is in Hexadecimal and assembly only takes in decimal offset value or specified memory location label. The hex value is to large, it exceed the range of [-512, 255]
+
+Line 32- label OUTERLOOP has already appeared; The Branch instruction is incorrectly represented, its not suppose to be pz rather zp, because of that the Assembler was incorrectly interpretting it. 
+
+Line 35- Constant outside of allowed range; The opperand does not allow for ST to use hex to specify the offset, decimal value is necessary to determine the offset.
+
+Line 43- no .END directive found; .END directive needs to be added at the end of the code to tell the assembler that the code has stopped.
+
+
 
 
 Question 2: For each label in the code, write down the corresponding memory location. 
 
+Label:		Memory Location:
+OUTERLOOP	x3004
+INNERLOOP	x3005
+INPUT		x300D
+RESULT		x3011
 
 
 Question 3: Between using labels and explicit memory locations/offsets, which one makes the most sense, and why?
+
+Labels is the best option to use for coding rather than memory locations/offsets, because it is much easier to refer and ST/LD things using memory than use offsets.
+
+
