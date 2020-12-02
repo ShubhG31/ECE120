@@ -2,7 +2,86 @@
 ; character, the table uses 16 memory locations, each of which contains
 ; 8 bits (the high 8 bits, for your convenience) marking pixels in the
 ; line for that character.
+;R0 is the output register
+;R1 is the row counter
+;R2 is the column counter
+;R3 is the line address 
+;R4 is the line address value
 
+	.ORIG	x3000			; the starting pc address is x3000
+
+; Initialize the counter for the loop and Character printed is loaded 
+ 	
+		AND 	R1, R1, #0	; R1 is cleared
+		ADD	R1, R1, #4	; R1 is set to 4
+		LDI	R3, CHAR_2	; R3 is set to character to be printed 
+
+MLOOP		ADD	R3, R3, R3	; R3 is added to itself until its equal to 16*R3
+		ADD 	R1, R1, #-1	; R1 decrements by 1: counter decreases
+		BRp	MLOOP		; Loops back when counter is positive
+
+; Initialize the Address for line for char to print
+
+		LEA 	R4, FONT_DATA	; Load the R4 with the address of FONT_DATA
+		ADD 	R3, R3, R4	; R3 contains the address of start address of Character
+
+; Initialize the ROW counter
+
+		ADD 	R1, R1, #7	; part 1 of adding 16 to Row Counter
+		ADD 	R1, R1, #9	; part 2 of adding 16 to Row COunter
+
+; Line counter checker
+
+NXTR		ADD 	R1, R1, #0	; TO set the CC code to the value of the row counter
+		BRz	FINISH		; ENDS code when row has repeated 16 times
+		LDR	R4, R3, #0	; Loads the R4 with the content of the address in R3
+	
+; Column Counter Initialized
+
+		AND	R2, R2, #0	;R2 is cleared
+		ADD	R2, R2, #8	;R2 is set to counter value of 8
+	
+; Display each column character in each row until done 16 times 
+; If (R2>0) then NXTC is run
+NXTC		ADD	R2, R2, #0	; Set CC for Column Counter
+		BRp 	CLOOP1		; While (Column>0), go to CLOOP1 
+		BRnz	INCR		; if while loop conditions not met then go to INCR
+
+CLOOP1		ADD	R4, R4, #0
+		BRn	CLOOP2		; if(R4<0) go to CLOOP2
+		BRzp	CLOOP3		; else go to CLOOP3
+
+; If(R4<0) then CLOOP2 is run
+
+CLOOP2		LDI R0, CHAR_1		; output value of x5001
+		OUT
+		ADD	R4, R4, R4	; R4 value is shifted to the left
+		ADD	R2, R2, #-1	; Column counter is decremented by 1
+		BRp	NXTC		; if column counter is positive then go back to NXTC
+		BRz	INCR		; if column counter is zero(or negative) it goes to INCR
+
+; else then CLOOP1 is run
+
+CLOOP3	LDI	R0, CHAR_0		; output vlaue of x5000 is printed
+		OUT
+		ADD	R4, R4, R4	; R4 value is shifted to the left
+		ADD	R2, R2, #-1	; Column counter is decremented by 1
+		BRp	NXTC		; if column counter is positive then go back to NXTC
+		BRz	INCR		; if column counter is zero(or negative) it goes to INCR
+
+; if(R2=0)then INCR is run
+
+INCR	LD	R0, NL			; output ascii value of new line is printed
+		OUT
+		ADD	R3, R3, #1	; the row address is incremented by 1	
+		ADD 	R1, R1, #-1	; the row counter is decremented by 1
+		BRnzp	NXTR		; goes back to the While(Row counter>0)	
+	
+FINISH	HALT
+CHAR_0		.FILL	X5000		; Contains the address for the character when value is 0
+CHAR_1		.FILL	X5001		; Contains the address for the character when value is 1
+CHAR_2		.FILL	X5002		; Contains the address what character will be printed
+NL		.FILL	xA		; Contains the value of ascii code for new line
 FONT_DATA
 	.FILL	x0000
 	.FILL	x0000
@@ -4100,3 +4179,5 @@ FONT_DATA
 	.FILL	x0000
 	.FILL	x0000
 	.FILL	x0000
+	
+	.END
