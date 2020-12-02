@@ -2,13 +2,21 @@
 ; character, the table uses 16 memory locations, each of which contains
 ; 8 bits (the high 8 bits, for your convenience) marking pixels in the
 ; line for that character.
+
+;This program prints out a specific character specified by memory location x5002 
+;Then the program prints the character using the characters specified by the memory locations
+;x5000 and x5001. The program prints out the character by using 2 while loops and using 
+;if statements to check if counter values are valid to display the character. This code uses a 
+;lot of conditions in order to check and implement the loops.
+
+;Registers used and what they mean 
 ;R0 is the output register
 ;R1 is the row counter
 ;R2 is the column counter
 ;R3 is the line address 
 ;R4 is the line address value
 
-	.ORIG	x3000			; the starting pc address is x3000
+		.ORIG	x3000		; the starting pc address is x3000
 
 ; Initialize the counter for the loop and Character printed is loaded 
  	
