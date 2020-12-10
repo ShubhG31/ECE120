@@ -3,6 +3,119 @@
 ; 8 bits (the high 8 bits, for your convenience) marking pixels in the
 ; line for that character.
 
+;This program prints out a string starting at specific character specified by the starting 
+;memory location x5002. Then the program prints the string using the characters specified by the
+;following memory locations x5000 and x5001. The program prints out the character by using 2 
+;while loops and using if statements to check if counter values are valid to display each 
+;character in the string. This code uses a lot of conditions in order to check and implement the 
+;loops. 
+
+;Registers used and what they mean 
+;R0 is the output register
+;R1 is the row counter
+;R2 is the column counter for individual characters
+;R3 is the line address 
+;R4 is the line address value
+;R5 is the next character line
+
+		.ORIG	x3000		; the starting pc address is x3000
+
+; Initialize the ROW counter
+		
+		AND	R1, R1, #0	; Register R1 is cleared
+		ADD 	R1, R1, #7	; part 1 of adding 16 to Row Counter
+		ADD 	R1, R1, #9	; part 2 of adding 16 to Row COunter
+
+;Load Initialize Character
+		LD 	R5, CHAR_2	; register R5 is loaded with the starting character 
+
+; Initialize the counter for the loop and Character printed is loaded 
+SKIP		AND	R2, R2, #0	; R2 is cleared
+		AND 	R4, R4, #0	; R1 is cleared
+		ADD	R4, R4, #4	; R1 is set to 4
+
+LOADCHAR	LDR	R3, R5, #0	; R3 is set to character to be printed 
+		BRz	NEXTL		; if R3 is 0 then it will go to NEXTL
+
+MLOOP		ADD	R3, R3, R3	; R3 is added to itself until its equal to 16*R3
+		ADD 	R4, R4, #-1	; R1 decrements by 1: counter decreases
+		BRp	MLOOP		; Loops back when counter is positive
+
+; Initialize the Address for line for char to print
+
+		LEA 	R4, FONT_DATA	; Load the R4 with the address of FONT_DATA
+
+		ADD 	R3, R3, R4	; R3 contains the address of start address of Character
+	
+		LD	R4, RC		;R4 is incremented by the RC which is the line counter
+		ADD	R3, R3, R4	;R3 is set to the character line address 
+
+; Line counter checker
+
+NXTR		ADD 	R1, R1, #0	; TO set the CC code to the value of the row counter
+		BRz	FINISH		; ENDS code when row has repeated 16 times
+		LDR	R4, R3, #0	; Loads the R4 with the content of the address in R3
+		
+	
+; Column Counter Initialized
+
+		AND	R2, R2, #0	;R2 is cleared
+		ADD	R2, R2, #8	;R2 is set to counter value of 8
+	
+; Display each column character in each row until done 16 times 
+; If (R2>0) then NXTC is run
+NXTC		ADD	R2, R2, #0	; Set CC for Column Counter
+		BRnz	INCR		; if column counter is 0 then go to INCR
+
+CLOOP1		ADD	R4, R4, #0	; Set CC for R4
+		BRzp	CLOOP3		; if R4 is positive or zero to go CLOOP3
+
+; If(R4<0) then CLOOP2 is run
+
+CLOOP2		LDI R0, CHAR_1		; output value of x5001
+		OUT
+		ADD	R4, R4, R4	; R4 value is shifted to the left
+		ADD	R2, R2, #-1	; Column counter is decremented by 1
+		BRp	NXTC		; if column counter is positive then go back to NXTC
+		BRz	INCR		; if column counter is zero(or negative) it goes to INCR
+
+; else then CLOOP1 is run
+
+CLOOP3		LDI	R0, CHAR_0	; output vlaue of x5000 is printed
+		OUT
+		ADD	R4, R4, R4	; R4 value is shifted to the left
+		ADD	R2, R2, #-1	; Column counter is decremented by 1
+		BRp	NXTC		; if column counter is positive then go back to NXTC
+		BRz	INCR		; if column counter is zero(or negative) it goes to INCR
+
+; if(R2=0)then INCR is run
+
+INCR		ADD 	R1, R1, #0	; CC is set for R1
+		BRz 	FINISH		; If row counter is 0, then go to FINISH
+		ADD	R5, R5, #1	; R5 is incremented for next character
+		BRnzp	SKIP		; go to skip to print out line for new character
+
+
+
+NEXTL		LD	R0, NL		; output ascii value of new line is printed
+		OUT	
+		LD 	R0, RC		; R0 is loaded with row counter
+		ADD	R0, R0, #1	; R0 is incremented by 1 
+		ST	R0, RC		; RC is stored with R0
+		LD	R5, CHAR_2	; R5 is loaded address of first character string
+		ADD 	R1, R1, #-1	; the row counter is decremented by 1
+		BRnp	SKIP		; goes back to the While(Row counter>0)	
+	
+FINISH		
+		AND	R0, R0, #0	; R0 is set to 0
+		ST	R0, RC		; RC is set to 0
+		HALT
+
+CHAR_0		.FILL	X5000		; Contains the address for the character when value is 0
+CHAR_1		.FILL	X5001		; Contains the address for the character when value is 1
+CHAR_2		.FILL	X5002		; Contains the address what character will be printed
+NL		.FILL	xA		; Contains the value of ascii code for new line
+RC		.FILL 	x0
 FONT_DATA
 	.FILL	x0000
 	.FILL	x0000
@@ -4100,3 +4213,5 @@ FONT_DATA
 	.FILL	x0000
 	.FILL	x0000
 	.FILL	x0000
+	
+	.END
